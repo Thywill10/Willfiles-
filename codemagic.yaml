@@ -9,4 +9,5 @@ workflows:
       - flutter pub get
       - flutter build apk --release
 
-      - build/app/outputs/flutter-apk/app-release.a
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
