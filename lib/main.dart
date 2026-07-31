@@ -20,15 +20,12 @@ class WillFilesApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'WillFiles',
-
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.green,
         ),
-
         scaffoldBackgroundColor: const Color(0xFFF6FFF6),
-
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,
@@ -36,3 +33,17 @@ class WillFilesApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
+
+      home: const SplashScreen(),
+
+      routes: {
+        '/dashboard': (context) => const DashboardPage(),
+        '/files': (context) => const FilesScreen(),
+        '/favorites': (context) => const FavoritesScreen(),
+        '/vault': (context) => const VaultScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/search': (context) => const SearchScreen(),
+      },
+    );
+  }
+}
