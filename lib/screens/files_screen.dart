@@ -796,33 +796,18 @@ Navigator.pop(context);
                                 showProperties(file);
                               },
 
-                              onDelete: () async {
+                             onDelete: () async {
   Navigator.pop(context);
-
   await _fileService.delete(file);
-
   await loadFiles();
-
   if (!mounted) return;
-
   ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(
       content: Text("Moved to Recycle Bin"),
     ),
   );
 },
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
+                            ),
+                          );
+                        },
+                      ),
