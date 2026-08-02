@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'search_screen.dart';
+import 'files_screen.dart';
+import 'vault_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -175,22 +177,110 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 15),
 
             GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 15,
-              children: [
-                _buildCard(Icons.folder, "Internal Storage"),
-                _buildCard(Icons.download, "Downloads"),
-                _buildCard(Icons.image, "Images"),
-                _buildCard(Icons.video_library, "Videos"),
-                _buildCard(Icons.music_note, "Music"),
-                _buildCard(Icons.description, "Documents"),
-                _buildCard(Icons.android, "APK Files"),
-                _buildCard(Icons.lock, "Secure Vault"),
-              ],
-            ),
+  shrinkWrap: true,
+  physics: const NeverScrollableScrollPhysics(),
+  crossAxisCount: 2,
+  crossAxisSpacing: 15,
+  mainAxisSpacing: 15,
+
+  children: [
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const FilesScreen(),
+        ),
+      );
+    },
+    child: _buildCard(Icons.folder, "Internal Storage"),
+  ),
+
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const FilesScreen(),
+        ),
+      );
+    },
+    child: _buildCard(Icons.download, "Downloads"),
+  ),
+
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const FilesScreen(),
+        ),
+      );
+    },
+    child: _buildCard(Icons.image, "Images"),
+  ),
+
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const FilesScreen(),
+        ),
+      );
+    },
+    child: _buildCard(Icons.video_library, "Videos"),
+  ),
+
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const FilesScreen(),
+        ),
+      );
+    },
+    child: _buildCard(Icons.music_note, "Music"),
+  ),
+
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const FilesScreen(),
+        ),
+      );
+    },
+    child: _buildCard(Icons.description, "Documents"),
+  ),
+
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const FilesScreen(),
+        ),
+      );
+    },
+    child: _buildCard(Icons.android, "APK Files"),
+  ),
+
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const VaultScreen(),
+        ),
+      );
+    },
+    child: _buildCard(Icons.lock, "Secure Vault"),
+  ),
+],
+),
 
             const SizedBox(height: 30),
 
@@ -240,7 +330,11 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-Widget _buildCard(IconData icon, String title) {
+Widget _buildCard(
+  IconData icon,
+  String title,
+) 
+{
   return Container(
     decoration: BoxDecoration(
       color: Colors.white,
@@ -268,13 +362,14 @@ Widget _buildCard(IconData icon, String title) {
     ),
   );
 }
-
+ 
 Widget _storageBox(
     IconData icon,
     Color color,
     String title,
     String size,
-    ) {
+    ) 
+{
   return Card(
     elevation: 2,
     shape: RoundedRectangleBorder(
@@ -308,7 +403,8 @@ Widget _recentFile(
   Color color,
   String title,
   String date,
-) {
+) 
+{
   return Card(
     margin: const EdgeInsets.only(bottom: 10),
     child: ListTile(
