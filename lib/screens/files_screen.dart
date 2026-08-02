@@ -745,69 +745,79 @@ Widget build(BuildContext context) {
   }
 },
 
-                        onLongPress: () {
+                                                onLongPress: () {
                           showModalBottomSheet(
                             context: context,
                             builder: (_) => LongPressMenu(
-                              onOpen: () =>
-                                  openFile(file),
+                              onOpen: () => openFile(file),
 
                               onRename: () {
-Navigator.pop(context);
+                                Navigator.pop(context);
                                 renameDialog(file);
                               },
 
                               onCopy: () {
-Navigator.pop(context);
+                                Navigator.pop(context);
                                 copyDialog(file);
                               },
 
                               onCut: () {
-Navigator.pop(context);
+                                Navigator.pop(context);
                                 cutDialog(file);
                               },
 
                               onMove: () {
-Navigator.pop(context);
+                                Navigator.pop(context);
                                 moveDialog(file);
                               },
 
                               onShare: () {
-  Navigator.pop(context);
-  _fileService.shareFile(file.path);
-},
+                                Navigator.pop(context);
+                                _fileService.shareFile(file.path);
+                              },
 
-                              onFavorite: ()  async {
-Navigator.pop(context);
+                              onFavorite: () async {
+                                Navigator.pop(context);
+                                await _fileService.addToFavorites(file.path);
 
-  await _fileService.addToFavorites(file.path);
+                                if (!mounted) return;
 
-  if (!mounted) return;
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("Added to Favorites"),
-    ),
-  );                   
-   },
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Added to Favorites"),
+                                  ),
+                                );
+                              },
 
                               onDetails: () {
-Navigator.pop(context);
+                                Navigator.pop(context);
                                 showProperties(file);
                               },
 
-                             onDelete: () async {
-  Navigator.pop(context);
-  await _fileService.delete(file);
-  await loadFiles();
-  if (!mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("Moved to Recycle Bin"),
-    ),
-  );
-},
+                              onDelete: () async {
+                                Navigator.pop(context);
+                                await _fileService.delete(file);
+                                await loadFiles();
+
+                                if (!mounted) return;
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Moved to Recycle Bin"),
+                                  ),
+                                );
+                              },
                             ),
                           );
                         },
                       ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+}
