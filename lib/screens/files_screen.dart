@@ -6,6 +6,8 @@ import '../services/file_service.dart';
 
 import '../widgets/long_press_menu.dart';
 
+import 'package:permission_handler/permission_handler.dart';
+
 import 'favorites_screen.dart';
 import 'folder_screen.dart';
 import 'image_viewer_screen.dart';
@@ -39,10 +41,42 @@ class _FilesScreenState extends State<FilesScreen> {
       TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    loadFiles();
+void initState() {
+  super.initState();
+  requestPermissionAndLoad();
+}
+
+Future<void> requestPermissionAndLoad() async {
+  if (await Permission.manageExternalStorage.isGranted) {
+    await loadFiles();
+    return;
   }
+
+  if (await Permission.manageExternalStorage.request().isGranted) {
+    await loadFiles();
+  } else {
+    await openAppSettings();
+
+    if (await Permission.manageExternalStorage.isGranted) {
+      await loadFiles();
+    }
+  }
+}
+
+  final status = await Permission.manageExternalStorage.request();
+
+  if (status.isGranted) {
+    loadFiles();
+  } else {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Storage permission is required to access your files."),
+      ),
+    );
+  }
+}
 
   Future<void> loadFiles() async {
   await _fileService.createRecycleBinFolder();
@@ -820,4 +854,5 @@ Widget build(BuildContext context) {
       );
     }
 }
+
 
