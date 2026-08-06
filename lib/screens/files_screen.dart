@@ -63,21 +63,7 @@ Future<void> requestPermissionAndLoad() async {
   }
 }
 
-  final status = await Permission.manageExternalStorage.request();
-
-  if (status.isGranted) {
-    loadFiles();
-  } else {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Storage permission is required to access your files."),
-      ),
-    );
-  }
-}
-
+  
   Future<void> loadFiles() async {
   await _fileService.createRecycleBinFolder();
 
