@@ -6,6 +6,17 @@ import 'vault_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  void _openFolder(BuildContext context, String path) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FilesScreen(
+          initialPath: path,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,10 +45,8 @@ class HomeScreen extends StatelessWidget {
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
 
             const Text(
@@ -60,18 +69,19 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
+            // =========================
+            // STORAGE
+            // =========================
+
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
-
               decoration: BoxDecoration(
                 color: Colors.green,
                 borderRadius: BorderRadius.circular(20),
               ),
-
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
 
                   const Text(
@@ -108,6 +118,10 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 25),
 
+            // =========================
+            // STORAGE CATEGORIES
+            // =========================
+
             const Text(
               "Storage Categories",
               style: TextStyle(
@@ -120,21 +134,28 @@ class HomeScreen extends StatelessWidget {
 
             Row(
               children: [
+
                 Expanded(
                   child: _storageBox(
+                    context,
                     Icons.image,
                     Colors.green,
                     "Images",
                     "3.2 GB",
+                    "/storage/emulated/0/Pictures",
                   ),
                 ),
+
                 const SizedBox(width: 10),
+
                 Expanded(
                   child: _storageBox(
+                    context,
                     Icons.video_library,
                     Colors.red,
                     "Videos",
                     "18.4 GB",
+                    "/storage/emulated/0/Movies",
                   ),
                 ),
               ],
@@ -144,27 +165,38 @@ class HomeScreen extends StatelessWidget {
 
             Row(
               children: [
+
                 Expanded(
                   child: _storageBox(
+                    context,
                     Icons.music_note,
                     Colors.purple,
                     "Music",
                     "2.1 GB",
+                    "/storage/emulated/0/Music",
                   ),
                 ),
+
                 const SizedBox(width: 10),
+
                 Expanded(
                   child: _storageBox(
+                    context,
                     Icons.description,
                     Colors.orange,
                     "Documents",
                     "1.4 GB",
+                    "/storage/emulated/0/Documents",
                   ),
                 ),
               ],
             ),
 
             const SizedBox(height: 30),
+
+            // =========================
+            // QUICK ACCESS
+            // =========================
 
             const Text(
               "Quick Access",
@@ -177,117 +209,93 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 15),
 
             GridView.count(
-  shrinkWrap: true,
-  physics: const NeverScrollableScrollPhysics(),
-  crossAxisCount: 2,
-  crossAxisSpacing: 15,
-  mainAxisSpacing: 15,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 15,
+              mainAxisSpacing: 15,
 
-  children: [
-  GestureDetector(
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const FilesScreen(),
-      ),
-    );
-  },
-  child: _buildCard(
-    Icons.storage,
-    "Internal Storage",
-  ),
-),
+              children: [
 
-  GestureDetector(
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const FilesScreen(
-          initialPath: "/storage/emulated/0/Download",
-        ),
-      ),
-    );
-  },
-  child: _buildCard(Icons.download, "Downloads"),
-),
+                // INTERNAL STORAGE
+                _quickAccessCard(
+                  context,
+                  Icons.storage,
+                  "Internal Storage",
+                  "/storage/emulated/0",
+                ),
 
-  GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const FilesScreen(),
-        ),
-      );
-    },
-    child: _buildCard(Icons.image, "Images"),
-  ),
+                // DOWNLOADS
+                _quickAccessCard(
+                  context,
+                  Icons.download,
+                  "Downloads",
+                  "/storage/emulated/0/Download",
+                ),
 
-  GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const FilesScreen(),
-        ),
-      );
-    },
-    child: _buildCard(Icons.video_library, "Videos"),
-  ),
+                // IMAGES
+                _quickAccessCard(
+                  context,
+                  Icons.image,
+                  "Images",
+                  "/storage/emulated/0/Pictures",
+                ),
 
-  GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const FilesScreen(),
-        ),
-      );
-    },
-    child: _buildCard(Icons.music_note, "Music"),
-  ),
+                // VIDEOS
+                _quickAccessCard(
+                  context,
+                  Icons.video_library,
+                  "Videos",
+                  "/storage/emulated/0/Movies",
+                ),
 
-  GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const FilesScreen(),
-        ),
-      );
-    },
-    child: _buildCard(Icons.description, "Documents"),
-  ),
+                // MUSIC
+                _quickAccessCard(
+                  context,
+                  Icons.music_note,
+                  "Music",
+                  "/storage/emulated/0/Music",
+                ),
 
-  GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const FilesScreen(),
-        ),
-      );
-    },
-    child: _buildCard(Icons.android, "APK Files"),
-  ),
+                // DOCUMENTS
+                _quickAccessCard(
+                  context,
+                  Icons.description,
+                  "Documents",
+                  "/storage/emulated/0/Documents",
+                ),
 
-  GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const VaultScreen(),
-        ),
-      );
-    },
-    child: _buildCard(Icons.lock, "Secure Vault"),
-  ),
-],
-),
+                // APK FILES
+                _quickAccessCard(
+                  context,
+                  Icons.android,
+                  "APK Files",
+                  "/storage/emulated/0/Download",
+                ),
+
+                // SECURE VAULT
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const VaultScreen(),
+                      ),
+                    );
+                  },
+                  child: _buildCard(
+                    Icons.lock,
+                    "Secure Vault",
+                  ),
+                ),
+              ],
+            ),
 
             const SizedBox(height: 30),
+
+            // =========================
+            // RECENT FILES
+            // =========================
 
             const Text(
               "Recent Files",
@@ -335,11 +343,42 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// =====================================================
+// QUICK ACCESS CARD
+// =====================================================
+
+Widget _quickAccessCard(
+  BuildContext context,
+  IconData icon,
+  String title,
+  String path,
+) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FilesScreen(
+            initialPath: path,
+          ),
+        ),
+      );
+    },
+    child: _buildCard(
+      icon,
+      title,
+    ),
+  );
+}
+
+// =====================================================
+// QUICK ACCESS DESIGN
+// =====================================================
+
 Widget _buildCard(
   IconData icon,
   String title,
-) 
-{
+) {
   return Container(
     decoration: BoxDecoration(
       color: Colors.white,
@@ -351,11 +390,19 @@ Widget _buildCard(
         ),
       ],
     ),
+
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, color: Colors.green, size: 45),
+
+        Icon(
+          icon,
+          color: Colors.green,
+          size: 45,
+        ),
+
         const SizedBox(height: 12),
+
         Text(
           title,
           textAlign: TextAlign.center,
@@ -367,59 +414,103 @@ Widget _buildCard(
     ),
   );
 }
- 
+
+// =====================================================
+// STORAGE CATEGORY CARD
+// =====================================================
+
 Widget _storageBox(
-    IconData icon,
-    Color color,
-    String title,
-    String size,
-    ) 
-{
-  return Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 35),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
+  BuildContext context,
+  IconData icon,
+  Color color,
+  String title,
+  String size,
+  String path,
+) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FilesScreen(
+            initialPath: path,
+          ),
+        ),
+      );
+    },
+
+    child: Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+
+        child: Column(
+          children: [
+
+            Icon(
+              icon,
+              color: color,
+              size: 35,
             ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            size,
-            style: const TextStyle(color: Colors.grey),
-          ),
-        ],
+
+            const SizedBox(height: 10),
+
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 5),
+
+            Text(
+              size,
+              style: const TextStyle(
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
 }
+
+// =====================================================
+// RECENT FILE
+// =====================================================
 
 Widget _recentFile(
   IconData icon,
   Color color,
   String title,
   String date,
-) 
-{
+) {
   return Card(
     margin: const EdgeInsets.only(bottom: 10),
+
     child: ListTile(
+
       leading: CircleAvatar(
         backgroundColor: color.withOpacity(0.15),
-        child: Icon(icon, color: color),
+        child: Icon(
+          icon,
+          color: color,
+        ),
       ),
+
       title: Text(title),
+
       subtitle: Text(date),
-      trailing: const Icon(Icons.chevron_right),
+
+      trailing: const Icon(
+        Icons.chevron_right,
+      ),
     ),
   );
 }
