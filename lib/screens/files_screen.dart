@@ -20,7 +20,12 @@ import 'storage_analyzer_screen.dart';
 import 'video_player_screen.dart';
 
 class FilesScreen extends StatefulWidget {
-  const FilesScreen({super.key});
+  final String? initialPath;
+
+  const FilesScreen({
+    super.key,
+    this.initialPath,
+  });
 
   @override
   State<FilesScreen> createState() => _FilesScreenState();
@@ -67,7 +72,9 @@ Future<void> requestPermissionAndLoad() async {
   Future<void> loadFiles() async {
   await _fileService.createRecycleBinFolder();
 
-  files = await _fileService.getInternalStorage();
+  final path = widget.initialPath ?? "/storage/emulated/0";
+
+  files = await _fileService.getFiles(path);
 
   filterFiles();
 
@@ -547,6 +554,8 @@ void openFile(FileSystemEntity file) async {
         ),
       ),
     );
+  } else {
+    await _fileService.openFile(file.path);
   }
 }
 

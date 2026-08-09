@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,6 +24,10 @@ class FileService {
 
   Future<List<FileSystemEntity>> getInternalStorage() async {
     return getFiles("/storage/emulated/0");
+  }
+
+  Future<void> openFile(String path) async {
+    await OpenFilex.open(path);
   }
 
   bool isFolder(FileSystemEntity entity) {
@@ -201,10 +206,22 @@ Future<bool> moveFile(
   }
 
   Future<void> delete(FileSystemEntity entity) async {
-  if (entity is File) {
-    await moveToRecycleBin(entity.path);
-  } else if (entity is Directory) {
-    await entity.delete(recursive: true);
+  try {
+    await createRecycleBinFolder();
+
+    final name = entity.path.split("/").last;
+    final destination =
+        "/storage/emulated/0/WillFilesRecycleBin/$name";
+
+    if (entity is File) {
+      await entity.rename(destination);
+    } else if (entity is Directory) {
+      await entity.rename(destination);
+    }
+
+    await addToRecycleBin(destination);
+  } catch (_) {
+    // Ignore delete errors
   }
 }
 
@@ -380,3 +397,5 @@ Future<bool> moveToRecycleBin(String sourcePath) async {
 }
 
 }
+
+

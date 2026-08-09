@@ -185,28 +185,33 @@ class HomeScreen extends StatelessWidget {
 
   children: [
   GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const FilesScreen(),
-        ),
-      );
-    },
-    child: _buildCard(Icons.folder, "Internal Storage"),
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const FilesScreen(),
+      ),
+    );
+  },
+  child: _buildCard(
+    Icons.storage,
+    "Internal Storage",
   ),
+),
 
   GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const FilesScreen(),
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const FilesScreen(
+          initialPath: "/storage/emulated/0/Download",
         ),
-      );
-    },
-    child: _buildCard(Icons.download, "Downloads"),
-  ),
+      ),
+    );
+  },
+  child: _buildCard(Icons.download, "Downloads"),
+),
 
   GestureDetector(
     onTap: () {
