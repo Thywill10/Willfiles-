@@ -17,7 +17,7 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late VideoPlayerController controller;
+  VideoPlayerController? controller;
 
   bool loading = true;
   String? errorMessage;
@@ -36,19 +36,28 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         throw Exception("Video file does not exist.");
       }
 
-      controller = VideoPlayerController.file(file);
+      await controller?.dispose();
+      controller = null;
 
-      await controller.initialize();
+      final newController = VideoPlayerController.file(file);
+
+      controller = newController;
+
+      await newController.initialize();
 
       if (!mounted) return;
 
       setState(() {
         loading = false;
+        errorMessage = null;
       });
 
-      await controller.play();
+      await newController.play();
     } catch (e) {
       if (!mounted) return;
+
+      await controller?.dispose();
+      controller = null;
 
       setState(() {
         loading = false;
@@ -59,15 +68,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void dispose() {
-    if (!loading) {
-      controller.dispose();
-    }
-
+    controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final videoController = controller;
+
     return Scaffold(
       backgroundColor: Colors.black,
 
@@ -117,36 +125,39 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       ),
                     ],
                   )
-                : GestureDetector(
-                    onTap: () {
-                      setState(() {});
-                    },
-                    child: AspectRatio(
-                      aspectRatio: controller.aspectRatio,
-                      child: VideoPlayer(controller),
-                    ),
-                  ),
+                : videoController != null &&
+                        videoController.value.isInitialized
+                    ? AspectRatio(
+                        aspectRatio:
+                            videoController.value.aspectRatio,
+                        child: VideoPlayer(videoController),
+                      )
+                    : const SizedBox.shrink(),
       ),
 
-      floatingActionButton: !loading && errorMessage == null
-          ? FloatingActionButton(
-              backgroundColor: Colors.green,
-              onPressed: () {
-                setState(() {
-                  if (controller.value.isPlaying) {
-                    controller.pause();
-                  } else {
-                    controller.play();
-                  }
-                });
-              },
-              child: Icon(
-                controller.value.isPlaying
-                    ? Icons.pause
-                    : Icons.play_arrow,
-              ),
-            )
-          : null,
+      floatingActionButton:
+          !loading &&
+                  errorMessage == null &&
+                  videoController != null &&
+                  videoController.value.isInitialized
+              ? FloatingActionButton(
+                  backgroundColor: Colors.green,
+                  onPressed: () {
+                    setState(() {
+                      if (videoController.value.isPlaying) {
+                        videoController.pause();
+                      } else {
+                        videoController.play();
+                      }
+                    });
+                  },
+                  child: Icon(
+                    videoController.value.isPlaying
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                  ),
+                )
+              : null,
     );
   }
 }
