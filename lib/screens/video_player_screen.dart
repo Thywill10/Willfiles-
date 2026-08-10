@@ -16,26 +16,53 @@ class VideoPlayerScreen extends StatefulWidget {
       _VideoPlayerScreenState();
 }
 
-class _VideoPlayerScreenState
-    extends State<VideoPlayerScreen> {
+class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late VideoPlayerController controller;
+
+  bool loading = true;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
+    initializeVideo();
+  }
 
-    controller =
-        VideoPlayerController.file(File(widget.videoPath))
-          ..initialize().then((_) {
-  if (!mounted) return;
+  Future<void> initializeVideo() async {
+    try {
+      final file = File(widget.videoPath);
 
-  setState(() {});
-});
+      if (!await file.exists()) {
+        throw Exception("Video file does not exist.");
+      }
+
+      controller = VideoPlayerController.file(file);
+
+      await controller.initialize();
+
+      if (!mounted) return;
+
+      setState(() {
+        loading = false;
+      });
+
+      await controller.play();
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        loading = false;
+        errorMessage = "Unable to play this video.";
+      });
+    }
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    if (!loading) {
+      controller.dispose();
+    }
+
     super.dispose();
   }
 
@@ -48,37 +75,78 @@ class _VideoPlayerScreenState
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         title: Text(
-  widget.videoPath.split('/').last,
-),
+          widget.videoPath.split('/').last,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
 
       body: Center(
-        child: controller.value.isInitialized
-            ? AspectRatio(
-                aspectRatio:
-                    controller.value.aspectRatio,
-                child: VideoPlayer(controller),
+        child: loading
+            ? const CircularProgressIndicator(
+                color: Colors.white,
               )
-            : const CircularProgressIndicator(),
+            : errorMessage != null
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.white,
+                        size: 60,
+                      ),
+                      const SizedBox(height: 15),
+                      Text(
+                        errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            loading = true;
+                            errorMessage = null;
+                          });
+
+                          initializeVideo();
+                        },
+                        child: const Text("Try Again"),
+                      ),
+                    ],
+                  )
+                : GestureDetector(
+                    onTap: () {
+                      setState(() {});
+                    },
+                    child: AspectRatio(
+                      aspectRatio: controller.aspectRatio,
+                      child: VideoPlayer(controller),
+                    ),
+                  ),
       ),
 
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.green,
-        child: Icon(
-          controller.value.isPlaying
-              ? Icons.pause
-              : Icons.play_arrow,
-        ),
-        onPressed: () {
-          setState(() {
-            if (controller.value.isPlaying) {
-              controller.pause();
-            } else {
-              controller.play();
-            }
-          });
-        },
-      ),
+      floatingActionButton: !loading && errorMessage == null
+          ? FloatingActionButton(
+              backgroundColor: Colors.green,
+              onPressed: () {
+                setState(() {
+                  if (controller.value.isPlaying) {
+                    controller.pause();
+                  } else {
+                    controller.play();
+                  }
+                });
+              },
+              child: Icon(
+                controller.value.isPlaying
+                    ? Icons.pause
+                    : Icons.play_arrow,
+              ),
+            )
+          : null,
     );
   }
 }

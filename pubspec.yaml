@@ -25,6 +25,7 @@ dependencies:
   provider: ^6.1.5
   intl: ^0.20.2
   shared_preferences: ^2.5.3
+  storage_space: ^1.2.0
 
 dev_dependencies:
   flutter_test:
