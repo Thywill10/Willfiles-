@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:open_filex/open_filex.dart';
+
 import '../services/file_service.dart';
 
 import '../widgets/long_press_menu.dart';
@@ -493,7 +495,10 @@ bool isVideo(String path) {
       name.endsWith(".mkv") ||
       name.endsWith(".avi") ||
       name.endsWith(".mov") ||
-      name.endsWith(".3gp");
+      name.endsWith(".3gp") ||
+      name.endsWith(".m4v") ||
+      name.endsWith(".webm") ||
+      name.endsWith(".flv");
 }
 
 bool isMusic(String path) {
@@ -506,56 +511,103 @@ bool isMusic(String path) {
       name.endsWith(".ogg");
 }
 
-void openFile(FileSystemEntity file) async {
-  await _fileService.addToRecent(file.path);
+Future<void> openFile(FileSystemEntity file) async {
+  final path = file.path;
 
+  await _fileService.addToRecent(path);
+
+  if (!mounted) return;
+
+  // Folders
   if (file is Directory) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => FolderScreen(
-          path: file.path,
+          path: path,
         ),
       ),
     );
-  } else if (isImage(file.path)) {
+    return;
+  }
+
+  // Images
+  if (isImage(path)) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ImageViewerScreen(
-          imagePath: file.path,
+          imagePath: path,
         ),
       ),
     );
-  } else if (isPdf(file.path)) {
+    return;
+  }
+
+  // PDFs
+  if (isPdf(path)) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => PdfViewerScreen(
-          pdfPath: file.path,
+          pdfPath: path,
         ),
       ),
     );
-  } else if (isVideo(file.path)) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => VideoPlayerScreen(
-          videoPath: file.path,
+    return;
+  }
+
+  // Videos
+  if (isVideo(path)) {
+    final result = await OpenFilex.open(path);
+
+    if (!mounted) return;
+
+    if (result.type != ResultType.done) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Could not open video: ${result.message}",
+          ),
+        ),
+      );
+    }
+
+    return;
+  }
+
+  // Music
+  if (isMusic(path)) {
+    final result = await OpenFilex.open(path);
+
+    if (!mounted) return;
+
+    if (result.type != ResultType.done) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Could not open music: ${result.message}",
+          ),
+        ),
+      );
+    }
+
+    return;
+  }
+
+  // Everything else
+  final result = await OpenFilex.open(path);
+
+  if (!mounted) return;
+
+  if (result.type != ResultType.done) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "Could not open file: ${result.message}",
         ),
       ),
     );
-  } else if (isMusic(file.path)) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MusicPlayerScreen(
-          audioPath: file.path,
-        ),
-      ),
-    );
-  } else {
-    await _fileService.openFile(file.path);
   }
 }
 
