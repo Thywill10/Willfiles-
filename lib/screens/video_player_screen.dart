@@ -30,6 +30,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Future<void> initializeVideo() async {
     try {
+      setState(() {
+        loading = true;
+        errorMessage = null;
+      });
+
       final file = File(widget.videoPath);
 
       if (!await file.exists()) {
@@ -37,7 +42,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       }
 
       await controller?.dispose();
-      controller = null;
 
       final newController = VideoPlayerController.file(file);
 
@@ -49,15 +53,18 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
       setState(() {
         loading = false;
-        errorMessage = null;
       });
 
       await newController.play();
-    } catch (e) {
-      if (!mounted) return;
 
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
       await controller?.dispose();
       controller = null;
+
+      if (!mounted) return;
 
       setState(() {
         loading = false;
@@ -70,6 +77,20 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void dispose() {
     controller?.dispose();
     super.dispose();
+  }
+
+  String formatDuration(Duration duration) {
+    final minutes = duration.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+
+    final seconds = duration.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+
+    return "$minutes:$seconds";
   }
 
   @override
@@ -89,13 +110,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         ),
       ),
 
-      body: Center(
-        child: loading
-            ? const CircularProgressIndicator(
+      body: loading
+          ? const Center(
+              child: CircularProgressIndicator(
                 color: Colors.white,
-              )
-            : errorMessage != null
-                ? Column(
+              ),
+            )
+          : errorMessage != null
+              ? Center(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(
@@ -113,49 +136,115 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            loading = true;
-                            errorMessage = null;
-                          });
-
-                          initializeVideo();
-                        },
+                        onPressed: initializeVideo,
                         child: const Text("Try Again"),
                       ),
                     ],
-                  )
-                : videoController != null &&
-                        videoController.value.isInitialized
-                    ? AspectRatio(
-                        aspectRatio:
-                            videoController.value.aspectRatio,
-                        child: VideoPlayer(videoController),
-                      )
-                    : const SizedBox.shrink(),
-      ),
+                  ),
+                )
+              : videoController != null &&
+                      videoController.value.isInitialized
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AspectRatio(
+                          aspectRatio:
+                              videoController.value.aspectRatio,
+                          child: VideoPlayer(videoController),
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        VideoProgressIndicator(
+                          videoController,
+                          allowScrubbing: true,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                          ),
+                          child: Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              ValueListenableBuilder(
+                                valueListenable:
+                                    videoController,
+                                builder:
+                                    (context, value, child) {
+                                  return Text(
+                                    formatDuration(
+                                      value.position,
+                                    ),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  );
+                                },
+                              ),
+                              ValueListenableBuilder(
+                                valueListenable:
+                                    videoController,
+                                builder:
+                                    (context, value, child) {
+                                  return Text(
+                                    formatDuration(
+                                      value.duration,
+                                    ),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  : const Center(
+                      child: Text(
+                        "Video could not be loaded.",
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
 
       floatingActionButton:
           !loading &&
                   errorMessage == null &&
                   videoController != null &&
                   videoController.value.isInitialized
-              ? FloatingActionButton(
-                  backgroundColor: Colors.green,
-                  onPressed: () {
-                    setState(() {
-                      if (videoController.value.isPlaying) {
-                        videoController.pause();
-                      } else {
-                        videoController.play();
-                      }
-                    });
+              ? ValueListenableBuilder(
+                  valueListenable: videoController,
+                  builder: (context, value, child) {
+                    return FloatingActionButton(
+                      backgroundColor: Colors.green,
+                      onPressed: () async {
+                        if (value.isPlaying) {
+                          await videoController.pause();
+                        } else {
+                          await videoController.play();
+                        }
+
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      },
+                      child: Icon(
+                        value.isPlaying
+                            ? Icons.pause
+                            : Icons.play_arrow,
+                      ),
+                    );
                   },
-                  child: Icon(
-                    videoController.value.isPlaying
-                        ? Icons.pause
-                        : Icons.play_arrow,
-                  ),
                 )
               : null,
     );
