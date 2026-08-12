@@ -511,54 +511,31 @@ bool isMusic(String path) {
       name.endsWith(".ogg");
 }
 
-Future<void> openFile(FileSystemEntity file) async {
-  final path = file.path;
-
-  await _fileService.addToRecent(path);
-
-  if (!mounted) return;
-
-  // Folders
-  if (file is Directory) {
+Future<void> _handleFileTap(FileSystemEntity entity) async {
+  if (entity is Directory) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => FolderScreen(
-          path: path,
+        builder: (_) => FilesScreen(
+          initialPath: entity.path,
         ),
       ),
     );
     return;
   }
 
-  // Images
-  if (isImage(path)) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ImageViewerScreen(
-          imagePath: path,
-        ),
-      ),
-    );
-    return;
-  }
-
-  // PDFs
-  if (isPdf(path)) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PdfViewerScreen(
-          pdfPath: path,
-        ),
-      ),
-    );
-    return;
-  }
+  final String path = entity.path;
+  final String extension = path.split('.').last.toLowerCase();
 
   // Videos
-  if (isVideo(path)) {
+  if (extension == 'mp4' ||
+      extension == 'mkv' ||
+      extension == 'avi' ||
+      extension == 'mov' ||
+      extension == '3gp' ||
+      extension == 'm4v' ||
+      extension == 'webm' ||
+      extension == 'flv') {
     final result = await OpenFilex.open(path);
 
     if (!mounted) return;
@@ -572,12 +549,15 @@ Future<void> openFile(FileSystemEntity file) async {
         ),
       );
     }
-
     return;
   }
 
   // Music
-  if (isMusic(path)) {
+  if (extension == 'mp3' ||
+      extension == 'wav' ||
+      extension == 'aac' ||
+      extension == 'm4a' ||
+      extension == 'ogg') {
     final result = await OpenFilex.open(path);
 
     if (!mounted) return;
@@ -591,11 +571,40 @@ Future<void> openFile(FileSystemEntity file) async {
         ),
       );
     }
-
     return;
   }
 
-  // Everything else
+  // Images
+  if (extension == 'jpg' ||
+      extension == 'jpeg' ||
+      extension == 'png' ||
+      extension == 'gif' ||
+      extension == 'webp') {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ImageViewerScreen(
+          imagePath: path,
+        ),
+      ),
+    );
+    return;
+  }
+
+  // PDF
+  if (extension == 'pdf') {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PdfViewerScreen(
+          pdfPath: path,
+        ),
+      ),
+    );
+    return;
+  }
+
+  // Everything else → Android system opener
   final result = await OpenFilex.open(path);
 
   if (!mounted) return;
@@ -822,7 +831,7 @@ Widget build(BuildContext context) {
   if (selectionMode) {
     toggleSelection(file);
   } else {
-    openFile(file);
+    _handleFileTap(file);
   }
 },
 
@@ -901,5 +910,6 @@ Widget build(BuildContext context) {
       );
     }
 }
+
 
 
