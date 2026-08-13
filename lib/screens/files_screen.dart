@@ -839,7 +839,7 @@ Widget build(BuildContext context) {
                           showModalBottomSheet(
                             context: context,
                             builder: (_) => LongPressMenu(
-                              onOpen: () => openFile(file),
+                              onOpen: () => _handleFileTap(file),
 
                               onRename: () {
                                 Navigator.pop(context);
