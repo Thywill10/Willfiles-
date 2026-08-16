@@ -5,6 +5,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FileService {
+  final String recycleBinPath =
+      "/storage/emulated/0/WillFilesRecycleBin";
+
   Future<List<FileSystemEntity>> getFiles(String path) async {
     final directory = Directory(path);
 
@@ -469,6 +472,7 @@ Future<bool> restoreFromTrash(String sourceTrashPath) async {
 }
 
 }
+
 
 
 

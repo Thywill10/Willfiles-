@@ -837,30 +837,34 @@ Widget build(BuildContext context) {
                                 Icons.chevron_right,
                               ),
 
-                        onTap: () {
-  if (selectionMode) {
-    toggleSelection(file);
-  } else {
-    _handleFileTap(file);
-  }
-},
+                                                                      onTap: () {
+                          if (selectionMode) {
+                            toggleSelection(file);
+                          } else {
+                            _handleFileTap(file);
+                          }
+                        },
 
-                                                                    onLongPress: () {
-                        showLongPressMenu(
-                          context,
-                          file,
-                          _fileService,
-                          loadFiles,
-                          () => _handleFileTap(file),
-                          () => renameDialog(file),
-                          () => copyDialog(file),
-                          () => cutDialog(file),
-                        );
-                      },
-                    ); 
-                  }, 
-                ), 
-    ); 
-  } 
-} 
+                        onLongPress: () {
+                          showLongPressMenu(
+                            context,
+                            file,
+                            _fileService,
+                            loadFiles,
+                            () => _handleFileTap(file),
+                            () => renameDialog(file),
+                            () => copyDialog(file),
+                            () => cutDialog(file),
+                          );
+                        },
+                      ), // Closes ListTile safely
+                    ); // Closes Card or row wrapper layout
+                  }, // Closes itemBuilder
+                ), // Closes ListView.builder
+              ), // Closes Expanded/flexible layout
+            ], // Closes children: [
+          ), // Closes the Column layout wrapper
+    ); // Closes Scaffold
+  } // Closes Widget build (THIS WAS MISSING A CLOSING BRACE)
+} // Closes class _FilesScreenState cleanly
 
