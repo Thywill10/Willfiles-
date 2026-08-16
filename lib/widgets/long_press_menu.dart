@@ -33,11 +33,8 @@ class LongPressMenu extends StatelessWidget {
     return SafeArea(
       child: Wrap(
         children: [
-
           ListTile(
-            leading: const Icon(
-              Icons.folder_open,
-            ),
+            leading: const Icon(Icons.folder_open),
             title: const Text("Open"),
             onTap: () {
               Navigator.pop(context);
@@ -46,9 +43,7 @@ class LongPressMenu extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(
-              Icons.edit,
-            ),
+            leading: const Icon(Icons.edit),
             title: const Text("Rename"),
             onTap: () {
               Navigator.pop(context);
@@ -57,9 +52,7 @@ class LongPressMenu extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(
-              Icons.copy,
-            ),
+            leading: const Icon(Icons.copy),
             title: const Text("Copy"),
             onTap: () {
               Navigator.pop(context);
@@ -68,9 +61,7 @@ class LongPressMenu extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(
-              Icons.content_cut,
-            ),
+            leading: const Icon(Icons.content_cut),
             title: const Text("Cut"),
             onTap: () {
               Navigator.pop(context);
@@ -79,9 +70,7 @@ class LongPressMenu extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(
-              Icons.drive_file_move,
-            ),
+            leading: const Icon(Icons.drive_file_move),
             title: const Text("Move"),
             onTap: () {
               Navigator.pop(context);
@@ -90,9 +79,7 @@ class LongPressMenu extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(
-              Icons.share,
-            ),
+            leading: const Icon(Icons.share),
             title: const Text("Share"),
             onTap: () {
               Navigator.pop(context);
@@ -105,9 +92,7 @@ class LongPressMenu extends StatelessWidget {
               Icons.star,
               color: Colors.amber,
             ),
-            title: const Text(
-              "Add to Favorites",
-            ),
+            title: const Text("Add to Favorites"),
             onTap: () {
               Navigator.pop(context);
               onFavorite?.call();
@@ -115,12 +100,8 @@ class LongPressMenu extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(
-              Icons.info_outline,
-            ),
-            title: const Text(
-              "Properties",
-            ),
+            leading: const Icon(Icons.info_outline),
+            title: const Text("Properties"),
             onTap: () {
               Navigator.pop(context);
               onDetails?.call();
@@ -156,6 +137,10 @@ void showLongPressMenu(
   FileSystemEntity file,
   FileService fileService,
   VoidCallback refresh,
+  VoidCallback onOpenClick,
+  VoidCallback onRenameClick,
+  VoidCallback onCopyClick,
+  VoidCallback onCutClick,
 ) {
   showModalBottomSheet(
     context: context,
@@ -165,60 +150,24 @@ void showLongPressMenu(
       ),
     ),
     builder: (_) => LongPressMenu(
-      onOpen: () {
-        // Will be handled by FilesScreen.
-      },
-
-      onRename: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Rename will be added soon.",
-            ),
-          ),
-        );
-      },
-
-      onCopy: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Copy will be added soon.",
-            ),
-          ),
-        );
-      },
-
-      onCut: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Cut will be added soon.",
-            ),
-          ),
-        );
-      },
-
-      onMove: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Move will be added soon.",
-            ),
-          ),
-        );
-      },
+      onOpen: onOpenClick,
+      onRename: onRenameClick,
+      onCopy: onCopyClick,
+      onCut: onCutClick,
+      onMove: onCutClick,
 
       onShare: () async {
         await fileService.shareFile(file.path);
       },
 
-      onFavorite: () {
+      onFavorite: () async {
+        await fileService.addToFavorites(file.path);
+
+        if (!context.mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              "Added to Favorites.",
-            ),
+            content: Text("Added to Favorites"),
           ),
         );
       },
@@ -231,8 +180,7 @@ void showLongPressMenu(
             content: Text(file.path),
             actions: [
               TextButton(
-                onPressed: () =>
-                    Navigator.pop(context),
+                onPressed: () => Navigator.pop(context),
                 child: const Text("OK"),
               ),
             ],
@@ -243,12 +191,14 @@ void showLongPressMenu(
       onDelete: () async {
         await fileService.delete(file);
 
+        if (!context.mounted) return;
+
         refresh();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              "File deleted.",
+              "${file.path.split('/').last} deleted successfully.",
             ),
           ),
         );

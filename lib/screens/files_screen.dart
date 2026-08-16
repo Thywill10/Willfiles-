@@ -203,9 +203,7 @@ Future<void> renameDialog(FileSystemEntity file) async {
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
           child: const Text("Cancel"),
         ),
         ElevatedButton(
@@ -214,8 +212,7 @@ Future<void> renameDialog(FileSystemEntity file) async {
 
             if (newName.isEmpty) return;
 
-            final success =
-                await _fileService.renameFile(
+            final success = await _fileService.renameFile(
               file.path,
               newName,
             );
@@ -227,16 +224,13 @@ Future<void> renameDialog(FileSystemEntity file) async {
             if (success) {
               loadFiles();
 
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(
+              ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content:
-                      Text("File renamed successfully"),
+                  content: Text("File renamed successfully"),
                 ),
               );
             } else {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(
+              ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text("Rename failed"),
                 ),
@@ -251,8 +245,13 @@ Future<void> renameDialog(FileSystemEntity file) async {
 }
 
 Future<void> copyDialog(FileSystemEntity file) async {
+  final String currentDir =
+      widget.initialPath ?? "/storage/emulated/0";
+
+  final String fileName = file.path.split('/').last;
+
   final controller = TextEditingController(
-    text: "/storage/emulated/0/${file.path.split('/').last}",
+    text: "$currentDir/$fileName",
   );
 
   await showDialog(
@@ -272,10 +271,13 @@ Future<void> copyDialog(FileSystemEntity file) async {
         ),
         ElevatedButton(
           onPressed: () async {
-            final success =
-                await _fileService.copyFile(
+            final destinationPath = controller.text.trim();
+
+            if (destinationPath.isEmpty) return;
+
+            final success = await _fileService.copyFile(
               file.path,
-              controller.text.trim(),
+              destinationPath,
             );
 
             if (!mounted) return;
@@ -304,8 +306,13 @@ Future<void> copyDialog(FileSystemEntity file) async {
 }
 
 Future<void> cutDialog(FileSystemEntity file) async {
+  final String currentDir =
+      widget.initialPath ?? "/storage/emulated/0";
+
+  final String fileName = file.path.split('/').last;
+
   final controller = TextEditingController(
-    text: "/storage/emulated/0/${file.path.split('/').last}",
+    text: "$currentDir/$fileName",
   );
 
   await showDialog(
@@ -325,10 +332,13 @@ Future<void> cutDialog(FileSystemEntity file) async {
         ),
         ElevatedButton(
           onPressed: () async {
-            final success =
-                await _fileService.cutFile(
+            final destinationPath = controller.text.trim();
+
+            if (destinationPath.isEmpty) return;
+
+            final success = await _fileService.cutFile(
               file.path,
-              controller.text.trim(),
+              destinationPath,
             );
 
             if (!mounted) return;
@@ -835,81 +845,22 @@ Widget build(BuildContext context) {
   }
 },
 
-                                                onLongPress: () {
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (_) => LongPressMenu(
-                              onOpen: () => _handleFileTap(file),
-
-                              onRename: () {
-                                Navigator.pop(context);
-                                renameDialog(file);
-                              },
-
-                              onCopy: () {
-                                Navigator.pop(context);
-                                copyDialog(file);
-                              },
-
-                              onCut: () {
-                                Navigator.pop(context);
-                                cutDialog(file);
-                              },
-
-                              onMove: () {
-                                Navigator.pop(context);
-                                moveDialog(file);
-                              },
-
-                              onShare: () {
-                                Navigator.pop(context);
-                                _fileService.shareFile(file.path);
-                              },
-
-                              onFavorite: () async {
-                                Navigator.pop(context);
-                                await _fileService.addToFavorites(file.path);
-
-                                if (!mounted) return;
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Added to Favorites"),
-                                  ),
-                                );
-                              },
-
-                              onDetails: () {
-                                Navigator.pop(context);
-                                showProperties(file);
-                              },
-
-                              onDelete: () async {
-                                Navigator.pop(context);
-                                await _fileService.delete(file);
-                                await loadFiles();
-
-                                if (!mounted) return;
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Moved to Recycle Bin"),
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-      );
-    }
-}
-
-
+                                                                    onLongPress: () {
+                        showLongPressMenu(
+                          context,
+                          file,
+                          _fileService,
+                          loadFiles,
+                          () => _handleFileTap(file),
+                          () => renameDialog(file),
+                          () => copyDialog(file),
+                          () => cutDialog(file),
+                        );
+                      },
+                    ); 
+                  }, 
+                ), 
+    ); 
+  } 
+} 
 

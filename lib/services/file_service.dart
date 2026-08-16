@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -209,17 +210,41 @@ Future<bool> moveFile(
   try {
     await createRecycleBinFolder();
 
+    final originalPath = entity.path;
     final name = entity.path.split("/").last;
+
+    final timestamp =
+        DateTime.now().millisecondsSinceEpoch;
+
     final destination =
-        "/storage/emulated/0/WillFilesRecycleBin/$name";
+        "$recycleBinPath/${timestamp}_$name";
 
     if (entity is File) {
       await entity.rename(destination);
     } else if (entity is Directory) {
       await entity.rename(destination);
+    } else {
+      return;
     }
 
-    await addToRecycleBin(destination);
+    final prefs = await SharedPreferences.getInstance();
+
+    final items =
+        prefs.getStringList("recycle_bin_items") ?? [];
+
+    final item = {
+      "name": name,
+      "originalPath": originalPath,
+      "trashPath": destination,
+      "deletedAt": DateTime.now().toIso8601String(),
+    };
+
+    items.add(jsonEncode(item));
+
+    await prefs.setStringList(
+      "recycle_bin_items",
+      items,
+    );
   } catch (_) {
     // Ignore delete errors
   }
@@ -342,9 +367,7 @@ Future<List<String>> getRecycleBin() async {
   return prefs.getStringList("recycle_bin") ?? [];
 }
 
-Future<void> removeFromRecycleBin(
-  String path,
-) async {
+Future<void> removeFromRecycleBin(String path) async {
   final prefs = await SharedPreferences.getInstance();
 
   List<String> recycle =
@@ -390,6 +413,55 @@ Future<bool> moveToRecycleBin(String sourcePath) async {
 
     await source.rename(destination);
 
+    await addToRecycleBin(destination);
+
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+Future<bool> purgePermanently(String path) async {
+  try {
+    final file = File(path);
+    final directory = Directory(path);
+
+    if (await file.exists()) {
+      await file.delete();
+    } else if (await directory.exists()) {
+      await directory.delete(recursive: true);
+    } else {
+      return false;
+    }
+
+    await removeFromRecycleBin(path);
+
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+Future<bool> restoreFromTrash(String sourceTrashPath) async {
+  try {
+    final fileName = sourceTrashPath.split("/").last;
+
+    final destination =
+        "/storage/emulated/0/Download/$fileName";
+
+    final file = File(sourceTrashPath);
+    final directory = Directory(sourceTrashPath);
+
+    if (await file.exists()) {
+      await file.rename(destination);
+    } else if (await directory.exists()) {
+      await directory.rename(destination);
+    } else {
+      return false;
+    }
+
+    await removeFromRecycleBin(sourceTrashPath);
+
     return true;
   } catch (_) {
     return false;
@@ -397,5 +469,6 @@ Future<bool> moveToRecycleBin(String sourcePath) async {
 }
 
 }
+
 
 
