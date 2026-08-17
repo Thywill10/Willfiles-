@@ -43,6 +43,8 @@ class _FilesScreenState extends State<FilesScreen> {
   bool loading = true;
   bool selectionMode = false;
   bool sortAscending = true;
+  FileSystemEntity? clipboardFile;
+  bool isCutOperation = false;
 
   final TextEditingController searchController =
       TextEditingController();
@@ -244,124 +246,32 @@ Future<void> renameDialog(FileSystemEntity file) async {
   );
 }
 
-Future<void> copyDialog(FileSystemEntity file) async {
-  final String currentDir =
-      widget.initialPath ?? "/storage/emulated/0";
+void copyDialog(FileSystemEntity file) {
+  setState(() {
+    clipboardFile = file;
+    isCutOperation = false;
+  });
 
-  final String fileName = file.path.split('/').last;
-
-  final controller = TextEditingController(
-    text: "$currentDir/$fileName",
-  );
-
-  await showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Copy File"),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          hintText: "Destination path",
-        ),
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        "Copied ${file.path.split('/').last}. Navigate to a folder and press Paste.",
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel"),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            final destinationPath = controller.text.trim();
-
-            if (destinationPath.isEmpty) return;
-
-            final success = await _fileService.copyFile(
-              file.path,
-              destinationPath,
-            );
-
-            if (!mounted) return;
-
-            Navigator.pop(context);
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  success
-                      ? "File copied successfully"
-                      : "Copy failed",
-                ),
-              ),
-            );
-
-            if (success) {
-              loadFiles();
-            }
-          },
-          child: const Text("Copy"),
-        ),
-      ],
     ),
   );
 }
 
-Future<void> cutDialog(FileSystemEntity file) async {
-  final String currentDir =
-      widget.initialPath ?? "/storage/emulated/0";
+void cutDialog(FileSystemEntity file) {
+  setState(() {
+    clipboardFile = file;
+    isCutOperation = true;
+  });
 
-  final String fileName = file.path.split('/').last;
-
-  final controller = TextEditingController(
-    text: "$currentDir/$fileName",
-  );
-
-  await showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Move File"),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          hintText: "Destination path",
-        ),
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        "Cut ${file.path.split('/').last}. Navigate to a folder and press Paste.",
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel"),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            final destinationPath = controller.text.trim();
-
-            if (destinationPath.isEmpty) return;
-
-            final success = await _fileService.cutFile(
-              file.path,
-              destinationPath,
-            );
-
-            if (!mounted) return;
-
-            Navigator.pop(context);
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  success
-                      ? "File moved successfully"
-                      : "Move failed",
-                ),
-              ),
-            );
-
-            if (success) {
-              loadFiles();
-            }
-          },
-          child: const Text("Move"),
-        ),
-      ],
     ),
   );
 }
@@ -653,6 +563,66 @@ Widget build(BuildContext context) {
       ),
 
       actions: [
+        if (clipboardFile != null && !selectionMode)
+          IconButton(
+            icon: const Icon(
+              Icons.assignment_turned_in,
+              color: Colors.white,
+            ),
+            tooltip: "Paste Here",
+            onPressed: () async {
+              final currentDir =
+                  widget.initialPath ?? "/storage/emulated/0";
+
+              final source = clipboardFile!;
+              final wasCut = isCutOperation;
+
+              bool success;
+
+              if (wasCut) {
+                success = await _fileService.moveFile(
+                  source.path,
+                  currentDir,
+                );
+              } else {
+                success = await _fileService.pasteFile(
+                  source.path,
+                  currentDir,
+                );
+              }
+
+              if (!mounted) return;
+
+              if (success) {
+                setState(() {
+                  clipboardFile = null;
+                  isCutOperation = false;
+                });
+
+                await loadFiles();
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      wasCut
+                          ? "File moved successfully."
+                          : "File copied successfully.",
+                    ),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      "Paste failed. The file may already exist in this folder.",
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
 
         if (!selectionMode)
 
