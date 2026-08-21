@@ -1,3 +1,4 @@
+
 import 'dart:io';
 import 'dart:convert';
 import 'package:open_filex/open_filex.dart';
@@ -209,47 +210,35 @@ Future<bool> moveFile(
     return results;
   }
 
-  Future<void> delete(FileSystemEntity entity) async {
+  Future<bool> delete(FileSystemEntity entity) async {
   try {
     await createRecycleBinFolder();
 
-    final originalPath = entity.path;
     final name = entity.path.split("/").last;
+    final destination = "$recycleBinPath/$name";
 
-    final timestamp =
-        DateTime.now().millisecondsSinceEpoch;
-
-    final destination =
-        "$recycleBinPath/${timestamp}_$name";
-
+    // Handle files and folders separately.
     if (entity is File) {
       await entity.rename(destination);
     } else if (entity is Directory) {
+      final destDir = Directory(destination);
+
+      // Remove an existing folder with the same name.
+      if (await destDir.exists()) {
+        await destDir.delete(recursive: true);
+      }
+
       await entity.rename(destination);
     } else {
-      return;
+      return false;
     }
 
-    final prefs = await SharedPreferences.getInstance();
+    await addToRecycleBin(destination);
 
-    final items =
-        prefs.getStringList("recycle_bin_items") ?? [];
-
-    final item = {
-      "name": name,
-      "originalPath": originalPath,
-      "trashPath": destination,
-      "deletedAt": DateTime.now().toIso8601String(),
-    };
-
-    items.add(jsonEncode(item));
-
-    await prefs.setStringList(
-      "recycle_bin_items",
-      items,
-    );
-  } catch (_) {
-    // Ignore delete errors
+    return true;
+  } catch (e) {
+    print("Soft deletion crash trace: $e");
+    return false;
   }
 }
 
@@ -472,6 +461,7 @@ Future<bool> restoreFromTrash(String sourceTrashPath) async {
 }
 
 }
+
 
 
 

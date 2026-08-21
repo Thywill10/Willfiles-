@@ -431,18 +431,44 @@ bool isMusic(String path) {
       name.endsWith(".ogg");
 }
 
-Future<void> _handleFileTap(FileSystemEntity entity) async {
-  if (entity is Directory) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => FilesScreen(
-          initialPath: entity.path,
-        ),
-      ),
+ /// Opens the restricted Android/data folder using the modern SAF engine
+  Future<void> _openAndroidDataDirectory() async {
+    // This is the official system path signature link for the Android/data folder
+    final Uri dataFolderUri = Uri.parse(
+      "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata"
     );
-    return;
+
+    // 1. Check if the user already clicked "Use this folder" in the past
+    final bool? isAlreadyGranted = await open_filex_or_saf_check.isDocumentUri(dataFolderUri);
+
+    if (isAlreadyGranted != true) {
+      // 2. If not granted, force open the Android system's native permission panel
+      await open_filex_or_saf_check.openDocumentTree(initialUri: dataFolderUri);
+    } else {
+      // 3. If already granted, you can safely fetch the hidden data folders
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Access to Android/data is already authorized.")),
+      );
+    }
   }
+
+ Future<void> _handleFileTap(FileSystemEntity entity) async {
+    if (entity is Directory) {
+      // INTERCEPT ROUTE: Detect if the user is trying to tap into the restricted data folder
+      if (entity.path.endsWith("Android/data")) {
+        await _openAndroidDataDirectory();
+        return;
+      }
+
+      // Normal navigation for all standard folders remains unchanged
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FilesScreen(initialPath: entity.path),
+        ),
+      );
+      return;
+    }
 
   final String path = entity.path;
   final String extension = path.split('.').last.toLowerCase();
@@ -551,17 +577,15 @@ Widget build(BuildContext context) {
   return Scaffold(
     backgroundColor: const Color(0xFFF6FFF6),
 
-    appBar: AppBar(
+       appBar: AppBar(
       backgroundColor: Colors.green,
       foregroundColor: Colors.white,
       centerTitle: true,
-
       title: Text(
         selectionMode
             ? "${selectedFiles.length} Selected"
             : "Files",
       ),
-
       actions: [
         if (clipboardFile != null && !selectionMode)
           IconButton(
@@ -571,23 +595,27 @@ Widget build(BuildContext context) {
             ),
             tooltip: "Paste Here",
             onPressed: () async {
-              final currentDir =
-                  widget.initialPath ?? "/storage/emulated/0";
-
+              final currentDir = widget.initialPath ?? "/storage/emulated/0";
               final source = clipboardFile!;
               final wasCut = isCutOperation;
+
+              // CRITICAL FIX: Extract the filename and combine it with the folder path
+              final String fileName = source.path.split('/').last;
+              final String exactDestinationPath = "$currentDir/$fileName";
 
               bool success;
 
               if (wasCut) {
-                success = await _fileService.moveFile(
+                // Fixed: Pass the exact target file path instead of just a folder
+                success = await _fileService.cutFile(
                   source.path,
-                  currentDir,
+                  exactDestinationPath,
                 );
               } else {
-                success = await _fileService.pasteFile(
+                // Fixed: Pass the exact target file path instead of just a folder
+                success = await _fileService.copyFile(
                   source.path,
-                  currentDir,
+                  exactDestinationPath,
                 );
               }
 
@@ -616,16 +644,14 @@ Widget build(BuildContext context) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text(
-                      "Paste failed. The file may already exist in this folder.",
+                      "Paste failed. The file may already exist or storage access is denied.",
                     ),
                   ),
                 );
               }
             },
           ),
-
         if (!selectionMode)
-
           IconButton(
             icon: Icon(
               sortAscending
@@ -633,10 +659,14 @@ Widget build(BuildContext context) {
                   : Icons.sort,
             ),
             onPressed: () {
-              sortAscending = !sortAscending;
-              filterFiles();
+              setState(() {
+                sortAscending = !sortAscending;
+                filterFiles();
+              });
             },
           ),
+      ], // Closes actions list safely
+    ); // Closes AppBar wrapper cleanly
 
         if (!selectionMode)
 
@@ -837,4 +867,5 @@ Widget build(BuildContext context) {
     ); // Closes Scaffold
   } // Closes Widget build (THIS WAS MISSING A CLOSING BRACE)
 } // Closes class _FilesScreenState cleanly
+
 
